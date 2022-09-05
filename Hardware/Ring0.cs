@@ -340,6 +340,17 @@ namespace OpenHardwareMonitor.Hardware {
       return driver.DeviceIOControl(IOCTL_OLS_WRITE_MSR, input);
     }
 
+    public static bool WrmsrT(uint index, ulong result) {
+      if (driver == null)
+        return false;
+
+      WrmsrInput input = new WrmsrInput();
+      input.Register = index;
+      input.Value = ((ulong) result);
+
+      return driver.DeviceIOControl(IOCTL_OLS_WRITE_MSR, input);
+    }
+
     public static byte ReadIoPort(uint port) {
       if (driver == null)
         return 0;

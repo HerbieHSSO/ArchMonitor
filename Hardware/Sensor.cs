@@ -36,7 +36,10 @@ namespace OpenHardwareMonitor.Hardware {
     
     private float sum;
     private int count;
-   
+    private string v1;
+    private int v2;
+    private SensorType hit;
+
     public Sensor(string name, int index, SensorType sensorType,
       Hardware hardware, ISettings settings) : 
       this(name, index, sensorType, hardware, null, settings) { }
@@ -71,6 +74,12 @@ namespace OpenHardwareMonitor.Hardware {
       hardware.Closing += delegate(IHardware h) {
         SetSensorValuesToSettings();
       };
+    }
+
+    public Sensor(string v1, int v2, SensorType hit) {
+      this.v1 = v1;
+      this.v2 = v2;
+      this.hit = hit;
     }
 
     private void SetSensorValuesToSettings() {

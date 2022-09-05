@@ -12,6 +12,7 @@ using System;
 using System.Globalization;
 using System.Text;
 
+
 namespace OpenHardwareMonitor.Hardware.CPU {
   internal sealed class IntelCPU : GenericCPU {
 
@@ -40,13 +41,16 @@ namespace OpenHardwareMonitor.Hardware.CPU {
     }
 
     private readonly Sensor[] coreTemperatures;
+
     private readonly Sensor packageTemperature;
     private readonly Sensor[] coreClocks;
     private readonly Sensor busClock;
+    private readonly Sensor[] backEndBound;
     private readonly Sensor[] powerSensors;
 
     private readonly Microarchitecture microarchitecture;
     private readonly double timeStampCounterMultiplier;
+
 
     private const uint IA32_THERM_STATUS_MSR = 0x019C;
     private const uint IA32_TEMPERATURE_TARGET = 0x01A2;
@@ -58,6 +62,8 @@ namespace OpenHardwareMonitor.Hardware.CPU {
     private const uint MSR_DRAM_ENERGY_STATUS = 0x619;
     private const uint MSR_PP0_ENERY_STATUS = 0x639;
     private const uint MSR_PP1_ENERY_STATUS = 0x641;
+    private const uint MSR_PERF_METRICS = 0x0329;
+
 
     private readonly uint[] energyStatusMSRs = { MSR_PKG_ENERY_STATUS, 
       MSR_PP0_ENERY_STATUS, MSR_PP1_ENERY_STATUS, MSR_DRAM_ENERGY_STATUS };
@@ -88,6 +94,12 @@ namespace OpenHardwareMonitor.Hardware.CPU {
       }
       return result;
     }
+
+
+
+
+
+
 
     public IntelCPU(int processorIndex, CPUID[][] cpuid, ISettings settings)
       : base(processorIndex, cpuid, settings) {
@@ -297,6 +309,14 @@ namespace OpenHardwareMonitor.Hardware.CPU {
           break;
       }
 
+
+
+
+
+
+
+
+
       // check if processor supports a digital thermal sensor at core level
       if (cpuid[0][0].Data.GetLength(0) > 6 &&
         (cpuid[0][0].Data[6, 0] & 1) != 0 && 
@@ -388,7 +408,17 @@ namespace OpenHardwareMonitor.Hardware.CPU {
           }
         }
       }
-
+      if (microarchitecture == Microarchitecture.CometLake ||
+          microarchitecture == Microarchitecture.Tremont ||
+          microarchitecture == Microarchitecture.TigerLake ||
+          microarchitecture == Microarchitecture.AlderLake) {
+        backEndBound = new Sensor[coreCount];
+        for (int i = 0; i < backEndBound.Length; i++) {
+          backEndBound[i] =
+            new Sensor(CoreString(i), i + 1, SensorType.BackEnd, this, settings);
+          ActivateSensor(backEndBound[i]);
+        } 
+    } 
       Update();
     }
 
@@ -403,7 +433,8 @@ namespace OpenHardwareMonitor.Hardware.CPU {
         MSR_PKG_ENERY_STATUS,
         MSR_DRAM_ENERGY_STATUS,
         MSR_PP0_ENERY_STATUS,
-        MSR_PP1_ENERY_STATUS
+        MSR_PP1_ENERY_STATUS,
+        MSR_PERF_METRICS,
       };
     }
 
@@ -528,6 +559,47 @@ namespace OpenHardwareMonitor.Hardware.CPU {
           lastEnergyConsumed[sensor.Index] = energyConsumed;
         }
       }
-    }
+      Ring0.WrmsrT(MSR_PERF_METRICS, 0);
+      Ring0.WrmsrT(0x30C, 0);
+
+
+
+      for (int i = 0; i < coreCount; i++) {
+        System.Threading.Thread.Sleep(1);
+        uint eax, edx;
+
+        Ring0.WrmsrT(0x038F, 0);
+        //Ring0.WrmsrT(0x0391, 0);
+        //Ring0.WrmsrT(0x0390, 0);
+        //Ring0.WrmsrT(0x038E, 0);
+        //Ring0.WrmsrT(0x030C, 0);
+        //Ring0.WrmsrT(0x0329, 0);
+        //Ring0.WrmsrT(0x030C, 0);
+        Ring0.WrmsrT(0xC2, 0);
+        //Ring0.Wrmsr(0x186, 0x004101c2, 0x00);
+        Ring0.Wrmsr(0x187, 0x004102A4, 0x00);
+        //Ring0.Wrmsr(0x188, 0x01c1010e, 0x00);
+        //Ring0.Wrmsr(0x189, 0x004101a2, 0x00);
+        Ring0.Wrmsr(0x38d, 0x2222, 0x00);
+        Ring0.Wrmsr(0x38f, 0x0f, 0x07);
+        Ring0.Wrmsr(0x00, 0x00, 0x00);
+
+
+
+        if (Ring0.RdmsrTx(0xc2, out eax, out edx,
+            cpuid[i][0].Affinity)) {
+
+          
+          //float backEndpercent = ((eax & 0xFF000000) >> 24);
+          float percent = (eax);
+          backEndBound[i].Value = percent;
+
+        } else {
+          backEndBound[i].Value = null;
+        }
+        
+      }
+
+      }
   }
 }
