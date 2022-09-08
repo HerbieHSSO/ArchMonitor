@@ -29,6 +29,8 @@ namespace OpenHardwareMonitor.Hardware {
     SmallData, // MB = 2^20 Bytes
     Throughput, // MB/s = 2^20 Bytes/s
     BackEnd,
+    FrontEnd,
+    CoreBound,
   }
 
   public struct SensorValue {
