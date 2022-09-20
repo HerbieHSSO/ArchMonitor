@@ -31,6 +31,9 @@ namespace OpenHardwareMonitor.Hardware {
     BackEnd,
     FrontEnd,
     CoreBound,
+    L1Bound,
+    L2Miss,
+    L3Miss,
   }
 
   public struct SensorValue {

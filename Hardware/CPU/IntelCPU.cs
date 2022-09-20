@@ -9,6 +9,7 @@
 */
 
 using System;
+using System.Diagnostics.PerformanceData;
 using System.Globalization;
 using System.Text;
 using System.Threading;
@@ -50,6 +51,9 @@ namespace OpenHardwareMonitor.Hardware.CPU {
     private readonly Sensor[] backEndBound;
     private readonly Sensor[] frontEndBound;
     private readonly Sensor[] coreBound;
+    private readonly Sensor[] L1Bound;
+    private readonly Sensor[] L2Miss;
+    private readonly Sensor[] L3Miss;
     private readonly Sensor[] powerSensors;
 
     private readonly Microarchitecture microarchitecture;
@@ -75,7 +79,7 @@ namespace OpenHardwareMonitor.Hardware.CPU {
     private float energyUnitMultiplier = 0;
     private DateTime[] lastEnergyTime;
     private uint[] lastEnergyConsumed;
-    private bool HasTMAsupport;
+
 
     private float[] Floats(float f) {
       float[] result = new float[coreCount];
@@ -450,6 +454,52 @@ namespace OpenHardwareMonitor.Hardware.CPU {
           ActivateSensor(coreBound[i]);
         }
       }
+      if (microarchitecture == Microarchitecture.IceLake ||
+          microarchitecture == Microarchitecture.Tremont ||
+          microarchitecture == Microarchitecture.TigerLake ||
+          microarchitecture == Microarchitecture.AlderLake) {
+        L1Bound = new Sensor[coreCount];
+
+        for (int i = 0; i < coreCount; i++) {
+          L1Bound[i] =
+            new Sensor(CoreString(i), i + 1, SensorType.L1Bound, this, settings);
+          ActivateSensor(L1Bound[i]);
+        }
+      }
+      if (microarchitecture == Microarchitecture.SandyBridge ||
+          microarchitecture == Microarchitecture.Haswell ||
+          microarchitecture == Microarchitecture.IvyBridge ||
+          microarchitecture == Microarchitecture.Haswell ||
+          microarchitecture == Microarchitecture.Skylake ||
+          microarchitecture == Microarchitecture.IceLake ||
+          microarchitecture == Microarchitecture.Tremont ||
+          microarchitecture == Microarchitecture.TigerLake ||
+          microarchitecture == Microarchitecture.AlderLake) {
+        L2Miss = new Sensor[coreCount];
+
+        for (int i = 0; i < coreCount; i++) {
+          L2Miss[i] =
+            new Sensor(CoreString(i), i + 1, SensorType.L2Miss, this, settings);
+          ActivateSensor(L2Miss[i]);
+        }
+      }
+      if (microarchitecture == Microarchitecture.SandyBridge ||
+          microarchitecture == Microarchitecture.Haswell ||
+          microarchitecture == Microarchitecture.IvyBridge ||
+          microarchitecture == Microarchitecture.Haswell ||
+          microarchitecture == Microarchitecture.Skylake ||
+          microarchitecture == Microarchitecture.IceLake ||
+          microarchitecture == Microarchitecture.Tremont ||
+          microarchitecture == Microarchitecture.TigerLake ||
+          microarchitecture == Microarchitecture.AlderLake) {
+        L3Miss = new Sensor[coreCount];
+
+        for (int i = 0; i < coreCount; i++) {
+          L3Miss[i] =
+            new Sensor(CoreString(i), i + 1, SensorType.L3Miss, this, settings);
+          ActivateSensor(L3Miss[i]);
+        }
+      }
       Update();
     }
 
@@ -595,17 +645,18 @@ namespace OpenHardwareMonitor.Hardware.CPU {
 
 
 
-      if (microarchitecture == Microarchitecture.AlderLake) {
-        float N;
-        uint eax_0x30A, edx_0x30A, eax_0xC1, edx_0xC1, eax_0xC2, edx_0xC2, eax_0xC3, edx_0xC3, eax_0xC4, edx_0xC4;
-        float IDQ_UOPS_NOT_DELIVERED_CORE;
-        float UOPS_ISSUED_ANY;
-        float UOPS_RETIRED_SLOTS;
-        float INT_MISC_RECOVERY_CYCLES;
-        float FE_Bound;
-        float Retiring;
-        float Bad_Speculation;
-        float BE_Bound;
+      if (microarchitecture == Microarchitecture.SandyBridge ||
+    microarchitecture == Microarchitecture.Haswell ||
+    microarchitecture == Microarchitecture.IvyBridge ||
+    microarchitecture == Microarchitecture.Haswell ||
+    microarchitecture == Microarchitecture.Skylake ||
+    microarchitecture == Microarchitecture.IceLake ||
+    microarchitecture == Microarchitecture.Tremont ||
+    microarchitecture == Microarchitecture.TigerLake ||
+    microarchitecture == Microarchitecture.AlderLake) {
+       
+        uint eax_0xC1, edx_0xC1, eax_0xC2, edx_0xC2, eax_0xC3, edx_0xC3, eax_0xC4, edx_0xC4;
+
 
 
 
@@ -617,6 +668,9 @@ namespace OpenHardwareMonitor.Hardware.CPU {
 
 
         for (int i = 0; i < coreCount; i++) {
+
+          
+          Ring0.WrmsrT(0x038D, 0);
           Ring0.WrmsrT(0x038F, 0);
 
           Ring0.WrmsrT(0xC1, 0);
@@ -624,112 +678,70 @@ namespace OpenHardwareMonitor.Hardware.CPU {
           Ring0.WrmsrT(0xC3, 0);
           Ring0.WrmsrT(0xC4, 0);
           Ring0.WrmsrT(0x30A, 0);
+          Ring0.WrmsrT(0x30C, 0);
 
 
+          Ring0.Wrmsr(0x186, 0x0043FF24, 0x00);
+          Ring0.Wrmsr(0x187, 0x00433F24, 0x00);
 
-          Ring0.Wrmsr(0x186, 0x0041019C, 0x00);
-          Ring0.Wrmsr(0x187, 0x004101AE, 0x00);
-          Ring0.Wrmsr(0x188, 0x004102C2, 0x00);
-          Ring0.Wrmsr(0x189, 0x004101AD, 0x00);
+          Ring0.Wrmsr(0x188, 0x00414F2E, 0x00);
+          Ring0.Wrmsr(0x189, 0x0041412E, 0x00);
 
 
-          Ring0.Wrmsr(0x38d, 0x2222, 0x00);
-          Ring0.Wrmsr(0x38f, 0x0f, 0x0F);
+          Ring0.Wrmsr(0x38d, 0x3333, 0x00);
+          Ring0.Wrmsr(0x38f, 0xf, 0x0f);
           Ring0.Wrmsr(0x00, 0x00, 0x00);
 
 
 
-          Ring0.RdmsrTx(0x30A, out eax_0x30A, out edx_0x30A, cpuid[i][0].Affinity);
+         
           Ring0.RdmsrTx(0xC1, out eax_0xC1, out edx_0xC1, cpuid[i][0].Affinity);
           Ring0.RdmsrTx(0xC2, out eax_0xC2, out edx_0xC2, cpuid[i][0].Affinity);
+
           Ring0.RdmsrTx(0xC3, out eax_0xC3, out edx_0xC3, cpuid[i][0].Affinity);
           Ring0.RdmsrTx(0xC4, out eax_0xC4, out edx_0xC4, cpuid[i][0].Affinity);
 
-
-          N = (float) 6 * eax_0x30A;
-       
-          IDQ_UOPS_NOT_DELIVERED_CORE = (float)eax_0xC1;
-
-          FE_Bound = 100 * (IDQ_UOPS_NOT_DELIVERED_CORE / N);
-          frontEndBound[i].Value = (float)FE_Bound;
-            
-          UOPS_ISSUED_ANY = (float)eax_0xC2;
-
-
-
-          
-          UOPS_RETIRED_SLOTS = (float)eax_0xC3;
-
-          Retiring = (float) 100 * (UOPS_RETIRED_SLOTS / N);
-                 
-          INT_MISC_RECOVERY_CYCLES = (float)eax_0xC4;
-
-          Bad_Speculation = 100 * ((UOPS_ISSUED_ANY - UOPS_RETIRED_SLOTS + 6 * INT_MISC_RECOVERY_CYCLES ) / N) ;
-
-          BE_Bound = (float) 100 - (FE_Bound + Retiring + Bad_Speculation);
-
-          backEndBound[i].Value = BE_Bound;
-
           Ring0.Wrmsr(0x00, 0x00, 0x00);
-
-
-          Ring0.WrmsrT(0x038F, 0);
-
-          Ring0.WrmsrT(0xC1, 0);
-          Ring0.WrmsrT(0xC2, 0);
-          Ring0.WrmsrT(0xC3, 0);
-          Ring0.WrmsrT(0xC4, 0);
-          Ring0.WrmsrT(0x30A, 0);
-
-
-
-          Ring0.Wrmsr(0x186, 0x004404A3, 0x00);
-          Ring0.Wrmsr(0x187, 0x004101B1, 0x00);
-          Ring0.Wrmsr(0x188, 0x004201B1, 0x00);
-          Ring0.Wrmsr(0x189, 0x004610A3, 0x00);
-
-
-          Ring0.Wrmsr(0x38d, 0x2222, 0x00);
-          Ring0.Wrmsr(0x38f, 0x0f, 0x0F);
-          Ring0.Wrmsr(0x00, 0x00, 0x00);
-
-
-
-          Ring0.RdmsrTx(0xC1, out uint eax_Cycle_Stall, out uint edx_Cycle_Stall, cpuid[i][0].Affinity);
-          Ring0.RdmsrTx(0xC2, out uint eax_UOPS_EXEc1, out uint edx_UOPS_EXEc1, cpuid[i][0].Affinity);
-          Ring0.RdmsrTx(0xC3, out uint eax_UOPS_EXEc2, out uint edx_UOPS_EXEc2, cpuid[i][0].Affinity);
-          Ring0.RdmsrTx(0xC4, out uint eax_CYCLES_MEM, out uint edx_CYCLES_MEM, cpuid[i][0].Affinity);
-
-          float CYCLE_ACTIVITY_STALLS_TOTAL = eax_Cycle_Stall;
-
-          float UOPS_EXECUTED_THREADc1 = eax_UOPS_EXEc1;
-          float UOPS_EXECUTED_THREADc2 = eax_UOPS_EXEc2;
-
-          float BE_Bound_at_EXE = (float)((CYCLE_ACTIVITY_STALLS_TOTAL + UOPS_EXECUTED_THREADc1 - UOPS_EXECUTED_THREADc2) / coreClocks[i].Value);
-
-          float MemoryBound = (float)(eax_CYCLES_MEM / coreClocks[i].Value);
-
-          float CoreBound = BE_Bound_at_EXE - MemoryBound;
-          coreBound[i].Value = CoreBound;
-
-
-
-          Ring0.Wrmsr(0x00, 0x00, 0x00);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+          try {
+            float L2_MissVal = (float)100 * (eax_0xC1 - eax_0xC2) / eax_0xC1;
+           
+            if (L2_MissVal > 100) {
+              L2Miss[i].Value = 0;
+            } else {
+              L2Miss[i].Value = L2_MissVal;
+            }
+      } catch {
+            L2Miss[i].Value = 0;
           }
+
+          try {
+            float L3_MissVal = 100 * (eax_0xC3 - eax_0xC4) / eax_0xC3;
+
+            if (L3_MissVal > 100) {
+              L3Miss[i].Value = 0;
+            } else {
+              L3Miss[i].Value = L3_MissVal;
+            }
+          } catch {
+            L3Miss[i].Value = 0;
+          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
       }
     }
   }

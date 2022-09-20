@@ -59,6 +59,8 @@ namespace OpenHardwareMonitor.GUI {
         case SensorType.Data: fixedFormat = "{0:F1} GB"; break;
         case SensorType.SmallData: fixedFormat = "{0:F1} MB"; break;
         case SensorType.Factor: fixedFormat = "{0:F3}"; break;
+        case SensorType.L2Miss: fixedFormat = "{0:F2} %"; break;
+        case SensorType.L3Miss: fixedFormat = "{0:F2} %"; break;
         default: fixedFormat = ""; break;
       }
 
@@ -130,6 +132,7 @@ namespace OpenHardwareMonitor.GUI {
     }
 
     public string Max {
+
       get { return ValueToString(sensor.Max); }
     }
 

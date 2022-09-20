@@ -62,6 +62,14 @@ namespace OpenHardwareMonitor.GUI {
           this.Image = Utilities.EmbeddedResources.GetImage("power.png");
           this.Text = "Powers";
           break;
+        case SensorType.L2Miss:
+          this.Image = Utilities.EmbeddedResources.GetImage("cache.png");
+          this.Text = "L2 Hitrate";
+          break;
+        case SensorType.L3Miss:
+          this.Image = Utilities.EmbeddedResources.GetImage("cache.png");
+          this.Text = "L3 Hitrate";
+          break;
         case SensorType.Data:
           this.Image = Utilities.EmbeddedResources.GetImage("data.png");
           this.Text = "Data";

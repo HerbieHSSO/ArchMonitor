@@ -23,6 +23,7 @@ using Aga.Controls.Tree.NodeControls;
 using OpenHardwareMonitor.Hardware;
 using OpenHardwareMonitor.WMI;
 using OpenHardwareMonitor.Utilities;
+using System.Net.Security;
 
 namespace OpenHardwareMonitor.GUI {
   public partial class MainForm : Form {
@@ -664,7 +665,7 @@ namespace OpenHardwareMonitor.GUI {
     }
 
     private void aboutMenuItem_Click(object sender, EventArgs e) {
-      new AboutBox().ShowDialog();
+      Console.WriteLine() ;
     }
 
     private void treeView_Click(object sender, EventArgs e) {
@@ -876,9 +877,7 @@ namespace OpenHardwareMonitor.GUI {
 
     private void sumbitReportMenuItem_Click(object sender, EventArgs e) 
     {
-      ReportForm form = new ReportForm();
-      form.Report = computer.GetReport();
-      form.ShowDialog();      
+      Console.WriteLine();     
     }
 
     private void resetMinMaxMenuItem_Click(object sender, EventArgs e) {
@@ -923,7 +922,7 @@ namespace OpenHardwareMonitor.GUI {
     }
 
     private void serverPortMenuItem_Click(object sender, EventArgs e) {
-      new PortForm(this).ShowDialog();
+      Console.WriteLine();
     }
 
     public HttpServer Server {
